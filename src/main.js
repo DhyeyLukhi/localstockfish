@@ -1,3 +1,5 @@
+const updateAnalysisPanelWithReview=updateAnalysisPanel;
+updateAnalysisPanel=function(){updateAnalysisPanelWithReview();updateMoveReview()};
 import { Chess } from 'chess.js';
 import './style.css';
 
@@ -15,13 +17,88 @@ app.innerHTML=`<header class="topbar"><a class="brand" href="#" aria-label="Stil
 const $=selector=>document.querySelector(selector);
 function buildAnalysisLayout(){const analysis=$('#analysis'),dashboard=analysis.querySelector('.dashboard'),boardColumn=analysis.querySelector('.board-column'),sidePanel=analysis.querySelector('.side-panel'),analysisTitle=analysis.querySelector('.analysis-title'),flip=$('#flip'),actions=analysis.querySelector('.analysis-actions'),tabs=sidePanel.querySelector('.panel-tabs'),count=$('#analysisCount'),engine=sidePanel.querySelector('.engine-status'),moveSection=sidePanel.querySelector('.move-section'),accuracy=sidePanel.querySelector('.score-card'),quality=sidePanel.querySelector('.move-quality'),qualityGrid=quality.querySelector('.quality-grid'),boardToolbar=document.createElement('div'),status=document.createElement('div'),reviewMain=document.createElement('div'),overview=document.createElement('section'),heading=document.createElement('div'),columnHead=document.createElement('div');flip.className='board-flip';flip.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM12 5v14M8 9l-2 2 2 2M16 15l2-2-2-2"/></svg><span>Flip board</span>';boardToolbar.className='board-toolbar';boardToolbar.append(flip);boardColumn.insertBefore(boardToolbar,boardColumn.querySelector('.board-shell'));$('#back').remove();actions.remove();status.className='analysis-status';status.append(engine,count);analysisTitle.append(status);tabs.remove();sidePanel.className='review-area';reviewMain.className='review-main';reviewMain.append(moveSection,accuracy);overview.className='overview-panel';heading.className='overview-heading';heading.innerHTML='<span class="section-label">OVERVIEW</span><span>WHITE &nbsp; BLACK</span>';overview.append(heading,quality);quality.className='overview-quality';columnHead.className='overview-column-head';columnHead.innerHTML='<span>MOVE</span><span>WHITE</span><span>BLACK</span>';const rows=[...qualityGrid.querySelectorAll('.quality-item')].map(item=>{const key=item.querySelector('b').id.replace('count-',''),row=document.createElement('div');row.className=`overview-row quality-${key}`;row.innerHTML=`<span>${item.querySelector('span').textContent}</span><b id="count-white-${key}">0</b><b id="count-black-${key}">0</b>`;return row});qualityGrid.className='overview-grid';qualityGrid.replaceChildren(columnHead,...rows);sidePanel.replaceChildren(reviewMain,overview);dashboard.replaceChildren(boardColumn,sidePanel);}
 buildAnalysisLayout();
+addMoveReviewLayout();
+function addMoveReviewLayout(){
+	const sidePanel=$('.review-area'),reviewMain=sidePanel.querySelector('.review-main'),overview=sidePanel.querySelector('.overview-panel'),accuracy=sidePanel.querySelector('.score-card'),review=document.createElement('section'),overviewArea=document.createElement('div');
+	review.className='move-review';
+	review.innerHTML='<div class="move-review-head"><span class="section-label">MOVE REVIEW</span><span id="reviewState">SELECT A MOVE</span></div><div class="review-details"><div class="review-entry"><span>CURRENT MOVE</span><strong id="reviewMove">—</strong><span id="reviewBadge" class="review-badge"><i aria-hidden="true"></i><b id="reviewLabel">—</b></span></div><div class="review-divider"></div><div class="review-entry best-entry"><span>BEST MOVE</span><strong id="reviewBest">—</strong></div></div>';
+	const boardColumn=$('.board-column'),boardToolbar=boardColumn.querySelector('.board-toolbar');
+	boardToolbar.querySelector('button').setAttribute('aria-label','Flip board');
+	boardToolbar.querySelector('button').title='Flip board';
+	boardColumn.querySelector('.board-coords').append(boardToolbar);
+	reviewMain.append(review);
+	overviewArea.className='overview-area';
+	overviewArea.append(overview,accuracy);
+	sidePanel.append(overviewArea);
+	const grid=overview.querySelector('.overview-grid'),columnHead=grid.querySelector('.overview-column-head');
+	const labels=[['brilliant','Brilliant'],['great','Great'],['best','Best'],['excellent','Excellent'],['good','Good'],['inaccuracy','Inaccuracy'],['mistake','Mistake'],['miss','Miss'],['blunder','Blunder']];
+	const rows=labels.map(([key,label])=>{
+		const row=document.createElement('div');
+		row.className=`overview-row quality-${key}`;
+		row.innerHTML=`<span>${label}</span><b id="count-white-${key}">0</b><b id="count-black-${key}">0</b>`;
+		return row
+	});
+	grid.replaceChildren(columnHead,...rows)
+}
+function updateMoveReview(){
+	const move=history[index-1],result=analyses[index-1],badge=$('#reviewBadge'),state=$('#reviewState');
+	$('#reviewMove').textContent=move?.san||'—';
+	$('#reviewBest').textContent='—';
+	if(!move){
+		state.textContent='SELECT A MOVE';
+		badge.className='review-badge';
+		$('#reviewLabel').textContent='—';
+		return
+	}
+	if(!result){
+		state.textContent=workingIndex===index-1?'ANALYZING':'PENDING';
+		badge.className='review-badge pending';
+		$('#reviewLabel').textContent=workingIndex===index-1?'Analyzing':'Pending';
+		return
+	}
+	const labels={brilliant:'Brilliant',great:'Great',best:'Best',excellent:'Excellent',good:'Good',inaccuracy:'Inaccuracy',mistake:'Mistake',miss:'Miss',blunder:'Blunder'};
+	state.textContent='ANALYSED';
+	badge.className=`review-badge quality-${result.classification}`;
+	$('#reviewLabel').textContent=labels[result.classification]||result.classification;
+	const best=result.bestMove||'',played=`${move.from}${move.to}${move.promotion||''}`;
+	if(best&&best!==played){
+		try{
+			const position=new Chess(positions[index-1]),bestMove=position.move({from:best.slice(0,2),to:best.slice(2,4),...(best.length>4?{promotion:best[4]}:{})});
+			$('#reviewBest').textContent=bestMove?.san||best
+		}catch{$('#reviewBest').textContent=best}
+	}else if(best){
+		$('#reviewBest').textContent='--'
+	}
+}
 document.addEventListener('keydown',event=>{if($('#analysis').classList.contains('hidden')||event.target.closest('input,textarea,select,[contenteditable="true"]'))return;if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();selectMove(index+(event.key==='ArrowRight'?1:-1))}});
 let history=[],positions=[],index=0,flipped=false,worker=null,mode='standard',analyses=[],analysisQueue=[],active=false,ready=false,lastMove=null,workingIndex=-1,searchStage='',interrupted=false,channel=null,channelControl=null,channelBytes=null,bestPositionInfo=null,latestInfo=null,searchDepth=14,lastInfoRender=0;
 const config={priorityPlies:8,profiles:{standard:{depth:14,threads:1,hash:64},max:{depth:20,threads:4,hash:256}}};
 const squares=()=>{const base=Array.from({length:64},(_,i)=>`${'abcdefgh'[i%8]}${8-Math.floor(i/8)}`);return flipped?base.reverse():base};
 function parseGame(raw){try{const game=new Chess();game.loadPgn(raw,{strict:false});const moves=game.history({verbose:true});if(!moves.length)throw Error('Add at least one chess move to analyse.');const replay=new Chess(),positions=[replay.fen()];moves.forEach(move=>{replay.move(move);positions.push(replay.fen())});return {moves,positions,headers:game.getHeaders()}}catch(error){throw new Error(/Add at least/.test(error.message)?error.message:'That PGN could not be read. Check the move notation and try again.')}}
 function validate(){try{parseGame($('#pgn').value);$('#validation').className='valid';$('#validation').innerHTML='<span>✓</span> Valid game format';$('#prepare').disabled=false}catch(error){$('#validation').className='invalid';$('#validation').innerHTML='<span>!</span> '+error.message;$('#prepare').disabled=true}}
-function renderBoard(){const board=$('#board'),game=new Chess(positions[index]||new Chess().fen()),matrix=game.board(),king=game.isCheck()?matrix.flatMap((row,r)=>row.map((piece,f)=>piece?.type==='k'&&piece.color===game.turn()?`${'abcdefgh'[f]}${8-r}`:null)).find(Boolean):null,mate=game.isCheckmate();board.innerHTML='';squares().forEach((square,i)=>{const file=square.charCodeAt(0)-97,rank=Number(square[1])-1,piece=matrix[7-rank]?.[file],element=document.createElement('button');element.className='square '+((file+rank)%2?'dark':'light');element.setAttribute('role','gridcell');element.setAttribute('aria-label',`${square}${piece?`, ${piece.color==='w'?'white':'black'} ${piece.type}`:''}${square===king?(mate?', checkmate':', in check'):''}`);element.dataset.square=square;if(lastMove&&(square===lastMove.from||square===lastMove.to))element.classList.add('last');if(square===king)element.classList.add(mate?'checkmate':'check');if(piece){const image=document.createElement('img');image.src=`/chess-assets/${piece.color==='w'?piece.type.toUpperCase():piece.type}.png`;image.alt=`${piece.color==='w'?'White':'Black'} ${piece.type}`;image.draggable=false;element.append(image)}if(i%8===0){const coord=document.createElement('span');coord.className='rank-label';coord.textContent=square[1];element.append(coord)}if(i>=56){const coord=document.createElement('span');coord.className='file-label';coord.textContent=square[0];element.append(coord)}board.append(element)})}
+function renderBoard(){
+	const board=$('#board'),game=new Chess(positions[index]||new Chess().fen()),matrix=game.board(),king=game.isCheck()?matrix.flatMap((row,r)=>row.map((piece,f)=>piece?.type==='k'&&piece.color===game.turn()?`${'abcdefgh'[f]}${8-r}`:null)).find(Boolean):null,mate=game.isCheckmate();
+	board.innerHTML='';
+	squares().forEach((square,i)=>{
+		const file=square.charCodeAt(0)-97,rank=Number(square[1])-1,piece=matrix[7-rank]?.[file],element=document.createElement('button');
+		element.className='square '+((file+rank)%2?'dark':'light');
+		element.setAttribute('role','gridcell');
+		element.setAttribute('aria-label',`${square}${piece?`, ${piece.color==='w'?'white':'black'} ${piece.type}`:''}${square===king?(mate?', checkmate':', in check'):''}`);
+		element.dataset.square=square;
+		if(lastMove&&(square===lastMove.from||square===lastMove.to))element.classList.add('last');
+		if(square===king)element.classList.add(mate?'checkmate':'check');
+		if(piece){
+			const image=document.createElement('img');
+			image.src=`${import.meta.env.BASE_URL}chess-assets/${piece.color==='w'?piece.type.toUpperCase():piece.type}.png`;
+			image.alt=`${piece.color==='w'?'White':'Black'} ${piece.type}`;
+			image.draggable=false;
+			element.append(image)
+		}
+		if(i%8===0){const coord=document.createElement('span');coord.className='rank-label';coord.textContent=square[1];element.append(coord)}
+		if(i>=56){const coord=document.createElement('span');coord.className='file-label';coord.textContent=square[0];element.append(coord)}
+		board.append(element)
+	})
+}
 function renderMoves(){const wrap=$('#moves'),fragment=document.createDocumentFragment();wrap.replaceChildren();for(let ply=0;ply<history.length;ply+=2){const row=document.createElement('div');row.className='move-row';const number=document.createElement('span');number.className='move-no';number.textContent=`${String(ply/2+1).padStart(2,'0')}.`;row.append(number);for(let side=0;side<2;side++){const move=history[ply+side];if(!move)continue;const movePly=ply+side,result=analyses[movePly],button=document.createElement('button');button.className='move'+(index===movePly+1?' selected':'')+(workingIndex===movePly?' analysing':'')+(result?` quality-${result.classification}`:'');button.textContent=move.san;button.setAttribute('aria-label',`Move ${movePly+1}, ${move.san}${result?`, ${result.classification}`:', not yet analysed'}`);button.onclick=()=>selectMove(movePly+1,true);row.append(button)}fragment.append(row)}wrap.append(fragment);$('#moveCount').textContent=`${history.length} PLIES`}
 function selectMove(next,prioritizeSelection=false){index=Math.max(0,Math.min(history.length,next));lastMove=index?history[index-1]:null;renderBoard();renderMoves();$('#movePosition').textContent=index===0?'START POSITION':`${Math.ceil(index/2)}${index%2?'':'…'} · ${history[index-1].san}`;if(prioritizeSelection&&active&&index>0&&!analyses[index-1])prioritize(index-1);updateAnalysisPanel()}
 function accuracyFromLoss(loss){return Math.max(0,Math.min(100,103.1668*Math.exp(-0.04354*Math.max(0,loss*100))-3.1669))}
