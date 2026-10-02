@@ -4,6 +4,10 @@ let inputBytes;
 let readIndex = 0;
 let endOfLine = false;
 
+const BASE_URL = new URL('../', self.location.href);
+const engineUrl = file => new URL(`engine/${file}`, BASE_URL).href;
+const engineRoot = new URL('engine/', BASE_URL).pathname;
+
 function readInput() {
   if (endOfLine) {
     endOfLine = false;
@@ -37,7 +41,7 @@ function emit(line) {
 self.onmessage = ({ data }) => {
   if (data.cmd === 1) {
     try {
-      importScripts('/engine/stockfish.js');
+      importScripts(engineUrl('stockfish.js'));
       self.onmessage({ data });
     } catch (error) {
       postMessage({ type: 'error', message: `Stockfish thread could not start: ${error.message}` });
@@ -54,7 +58,7 @@ self.onmessage = ({ data }) => {
       stdin: readInput,
       print: emit,
       printErr: message => postMessage({ type: 'diagnostic', message: String(message) }),
-      locateFile: path => `/engine/${path}`,
+      locateFile: path => engineUrl(path),
       onRuntimeInitialized() {
         engine = self.Module;
         postMessage({ type: 'loaded' });
@@ -66,7 +70,7 @@ self.onmessage = ({ data }) => {
       },
     };
     self.Module = options;
-    cacheEngineAssets(data.cacheVersion).then(() => importScripts('/engine/stockfish.js')).catch(error => {
+    cacheEngineAssets(data.cacheVersion).then(() => importScripts(engineUrl('stockfish.js'))).catch(error => {
       postMessage({ type: 'error', message: `Stockfish could not be loaded: ${error.message}` });
     });
   } catch (error) {
@@ -79,7 +83,7 @@ async function cacheEngineAssets(version) {
   let cache;
   try {
     if (!version) {
-      const response = await self.fetch('/engine/engine.version');
+      const response = await self.fetch(engineUrl('engine.version'));
       if (response.ok) version = (await response.text()).trim();
     }
     if (!version) return;
@@ -92,7 +96,10 @@ async function cacheEngineAssets(version) {
   self.fetch = async (input, init) => {
     const request = new Request(input, init);
     const url = new URL(request.url);
-    if (url.origin !== self.location.origin || !/^\/engine\/stockfish\.(wasm|data)$/.test(url.pathname)) {
+    const isEngineAsset =
+      url.pathname === `${engineRoot}stockfish.wasm` ||
+      url.pathname === `${engineRoot}stockfish.data`;
+    if (url.origin !== self.location.origin || !isEngineAsset) {
       return originalFetch(request);
     }
     try {
