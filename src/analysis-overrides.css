@@ -1,0 +1,196 @@
+.board-column .board-toolbar {
+	width: 100%;
+	align-self: stretch;
+	justify-content: flex-end;
+	padding: 0 0 8px;
+}
+
+.board-column .board-toolbar .board-flip {
+	white-space: nowrap;
+}
+
+.square.check,
+.square.checkmate {
+	background: #d83d36 !important;
+}
+
+.square.check::before,
+.square.checkmate::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	background: #f0443b;
+	opacity: 0.25;
+	pointer-events: none;
+	animation: king-check-fill 1.35s ease-in-out infinite;
+}
+
+.square.check img,
+.square.checkmate img {
+	z-index: 2;
+}
+
+.square.check .rank-label,
+.square.check .file-label,
+.square.checkmate .rank-label,
+.square.checkmate .file-label {
+	z-index: 3;
+}
+
+@keyframes king-check-fill {
+	50% {
+		opacity: 0.8;
+	}
+}
+
+.move.analysing {
+	background: #465735;
+	color: #fff;
+	box-shadow: inset 0 0 0 1px #c8f36a, 0 0 12px #c8f36a35;
+	animation: move-analysis-strong 2.2s ease-in-out infinite;
+}
+
+@keyframes move-analysis-strong {
+	50% {
+		background: #627b43;
+		box-shadow: inset 0 0 0 2px #d8ff83, 0 0 18px #c8f36a70;
+	}
+}
+
+@media (min-width: 701px) {
+	.analysis {
+		height: auto;
+		min-height: calc(100vh - 76px);
+		overflow: visible;
+	}
+
+	.analysis .dashboard {
+		flex: 0 0 auto;
+		min-height: 0;
+	}
+
+	.analysis .board-shell {
+		flex: 0 0 auto;
+	}
+
+	.analysis .side-panel {
+		min-height: auto;
+	}
+
+	.analysis .review-area {
+		height: auto;
+	}
+
+	.analysis .board-column .board-toolbar {
+		order: 1;
+		padding-right: max(0px, calc(100% - 42px - (125vh - 385px)));
+	}
+
+	.analysis .board {
+		width: min(100%, calc(125vh - 385px));
+		max-height: calc(125vh - 385px);
+	}
+}
+
+@media (min-width: 1101px) {
+	.analysis .dashboard {
+		grid-template-columns: minmax(0, 1.27fr) minmax(0, 0.73fr);
+	}
+}
+
+@media (min-width: 701px) and (max-width: 900px) {
+	.analysis .dashboard {
+		display: flex;
+		flex-direction: column;
+		gap: 18px;
+	}
+
+	.analysis .board-column {
+		width: 100%;
+	}
+
+	.analysis .review-area {
+		width: 100%;
+		grid-template-columns: minmax(0, 1fr) minmax(220px, 0.85fr);
+	}
+}
+
+/* Restore fixed desktop layout and independent move-list scrolling */
+@media (min-width: 701px) {
+    .analysis {
+        height: calc(100vh - 76px);
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .analysis-title {
+        flex: 0 0 auto;
+    }
+
+    .analysis > .dashboard {
+        flex: 1 1 0;
+        min-height: 0;
+        height: 0;
+    }
+
+    .dashboard > .board-column,
+    .dashboard > .review-area {
+        min-height: 0;
+    }
+
+    .review-area {
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .review-main,
+    .overview-area {
+        min-height: 0;
+    }
+
+    .review-main {
+        grid-template-rows: minmax(0, 1fr) auto;
+        overflow: hidden;
+    }
+
+    .move-section {
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .move-section .moves {
+        flex: 1 1 0;
+        min-height: 0;
+        max-height: none;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+    }
+
+    .overview-panel {
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .side-panel {
+        min-height: 0;
+    }
+}
+
+/* Keep mobile behavior unchanged */
+@media (max-width: 700px) {
+    .analysis {
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .move-section .moves {
+        max-height: 240px;
+        min-height: 120px;
+        overflow-y: auto;
+    }
+}

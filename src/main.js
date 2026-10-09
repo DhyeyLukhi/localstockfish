@@ -2,8 +2,9 @@ const updateAnalysisPanelWithReview=updateAnalysisPanel;
 updateAnalysisPanel=function(){updateAnalysisPanelWithReview();updateMoveReview()};
 import { Chess } from 'chess.js';
 import './style.css';
+import './analysis-overrides.css';
 
-const startPGN = `[Event "Quietly played"]\n[Site "Local analysis"]\n[Date "2025.01.01"]\n[Round "—"]\n[White "White"]\n[Black "Black"]\n[Result "*"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 *`;
+const startPGN = '';
 const glyph={w:'♔♕♖♗♘♙',b:'♚♛♜♝♞♟'};
 const pieceFiles={k:'K',q:'Q',r:'R',b:'B',n:'N',p:'P'};
 const app=document.querySelector('#app');
@@ -15,9 +16,13 @@ app.innerHTML=`<header class="topbar"><a class="brand" href="#" aria-label="Stil
 <div id="toast" role="status" class="toast"></div>`;
 
 const $=selector=>document.querySelector(selector);
+$('.brand-mark').textContent='b.';
+$('.brand').setAttribute('aria-label','Brilliancy home');
+$('.brand span:last-child').textContent='BRILLIANCY';
 function buildAnalysisLayout(){const analysis=$('#analysis'),dashboard=analysis.querySelector('.dashboard'),boardColumn=analysis.querySelector('.board-column'),sidePanel=analysis.querySelector('.side-panel'),analysisTitle=analysis.querySelector('.analysis-title'),flip=$('#flip'),actions=analysis.querySelector('.analysis-actions'),tabs=sidePanel.querySelector('.panel-tabs'),count=$('#analysisCount'),engine=sidePanel.querySelector('.engine-status'),moveSection=sidePanel.querySelector('.move-section'),accuracy=sidePanel.querySelector('.score-card'),quality=sidePanel.querySelector('.move-quality'),qualityGrid=quality.querySelector('.quality-grid'),boardToolbar=document.createElement('div'),status=document.createElement('div'),reviewMain=document.createElement('div'),overview=document.createElement('section'),heading=document.createElement('div'),columnHead=document.createElement('div');flip.className='board-flip';flip.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM12 5v14M8 9l-2 2 2 2M16 15l2-2-2-2"/></svg><span>Flip board</span>';boardToolbar.className='board-toolbar';boardToolbar.append(flip);boardColumn.insertBefore(boardToolbar,boardColumn.querySelector('.board-shell'));$('#back').remove();actions.remove();status.className='analysis-status';status.append(engine,count);analysisTitle.append(status);tabs.remove();sidePanel.className='review-area';reviewMain.className='review-main';reviewMain.append(moveSection,accuracy);overview.className='overview-panel';heading.className='overview-heading';heading.innerHTML='<span class="section-label">OVERVIEW</span><span>WHITE &nbsp; BLACK</span>';overview.append(heading,quality);quality.className='overview-quality';columnHead.className='overview-column-head';columnHead.innerHTML='<span>MOVE</span><span>WHITE</span><span>BLACK</span>';const rows=[...qualityGrid.querySelectorAll('.quality-item')].map(item=>{const key=item.querySelector('b').id.replace('count-',''),row=document.createElement('div');row.className=`overview-row quality-${key}`;row.innerHTML=`<span>${item.querySelector('span').textContent}</span><b id="count-white-${key}">0</b><b id="count-black-${key}">0</b>`;return row});qualityGrid.className='overview-grid';qualityGrid.replaceChildren(columnHead,...rows);sidePanel.replaceChildren(reviewMain,overview);dashboard.replaceChildren(boardColumn,sidePanel);}
 buildAnalysisLayout();
 addMoveReviewLayout();
+$('.board-column').insertBefore($('.board-toolbar'),$('.board-shell'));
 function addMoveReviewLayout(){
 	const sidePanel=$('.review-area'),reviewMain=sidePanel.querySelector('.review-main'),overview=sidePanel.querySelector('.overview-panel'),accuracy=sidePanel.querySelector('.score-card'),review=document.createElement('section'),overviewArea=document.createElement('div');
 	review.className='move-review';
@@ -60,13 +65,13 @@ function updateMoveReview(){
 	state.textContent='ANALYSED';
 	badge.className=`review-badge quality-${result.classification}`;
 	$('#reviewLabel').textContent=labels[result.classification]||result.classification;
-	const best=result.bestMove||'',played=`${move.from}${move.to}${move.promotion||''}`;
-	if(best&&best!==played){
+	const best=result.bestMove||'',played=`${move.from}${move.to}${move.promotion||''}`,playedIsBest=result.playedIsBest??best===played;
+	if(best&&!playedIsBest){
 		try{
 			const position=new Chess(positions[index-1]),bestMove=position.move({from:best.slice(0,2),to:best.slice(2,4),...(best.length>4?{promotion:best[4]}:{})});
 			$('#reviewBest').textContent=bestMove?.san||best
 		}catch{$('#reviewBest').textContent=best}
-	}else if(best){
+	}else if(playedIsBest){
 		$('#reviewBest').textContent='--'
 	}
 }
@@ -113,6 +118,36 @@ function reset(){if(worker){sendUci('quit');worker.terminate();worker=null}chann
 $('#newGame').onclick=reset;$('#cancelPrep').onclick=reset;$('#pgn').addEventListener('input',validate);validate();document.querySelectorAll('.profile').forEach(button=>button.onclick=()=>{document.querySelectorAll('.profile').forEach(item=>item.classList.toggle('active',item===button));mode=button.dataset.mode});$('#flip').onclick=()=>{flipped=!flipped;$('.evaluation').classList.toggle('flipped',flipped);$('.board-column').classList.toggle('flipped',flipped);renderBoard()};$('#firstMove').onclick=()=>selectMove(0);$('#prevMove').onclick=()=>selectMove(index-1);$('#nextMove').onclick=()=>selectMove(index+1);$('#lastMove').onclick=()=>selectMove(history.length);
 $('#prepare').onclick=()=>{let parsed;try{parsed=parseGame($('#pgn').value)}catch(error){showToast(error.message);return}positions=parsed.positions;history=parsed.moves;index=0;analyses=Array(history.length).fill(null);analysisQueue=[];flipped=false;$('.evaluation').classList.remove('flipped');$('.board-column').classList.remove('flipped');lastMove=null;const headers=parsed.headers;$('#gameTitle').textContent=headers.Event||'Untitled game';$('#whiteName').textContent=headers.White||'White';$('#blackName').textContent=headers.Black||'Black';$('#prepTitle').textContent='Preparing your engine';$('#prepMessage').textContent='Checking local Stockfish and browser capabilities…';$('#prepStage').textContent='ENGINE · WEBASSEMBLY';$('#prepProgress').textContent='CHECKING LOCAL ASSETS';$('.prep-meter').classList.add('indeterminate');$('.prep-meter span').style.width='';show('preparing');setTimeout(initialize,100)};
 async function initialize(){try{if(typeof SharedArrayBuffer==='undefined'||!crossOriginIsolated)throw Error('This browser needs cross-origin isolation for the local threaded engine. Use the supplied Vite server.');for(const asset of [import.meta.env.BASE_URL + 'engine/stockfish.js',import.meta.env.BASE_URL + 'engine/stockfish.wasm',import.meta.env.BASE_URL + 'engine/stockfish.data',import.meta.env.BASE_URL + 'engine/worker.js']){const response=await fetch(asset,{method:'HEAD'});if(!response.ok)throw Error('A local Stockfish asset is missing. Run npm run build:engine first.')}$('#prepTitle').textContent='Initializing Stockfish';$('#prepMessage').textContent='Loading the locally built engine and evaluation network…';$('#prepProgress').textContent='LOCAL ENGINE · INITIALIZING';const settings=engineSettings();searchDepth=settings.depth;channel=new SharedArrayBuffer(8+65536);channelControl=new Int32Array(channel,0,2);channelBytes=new Uint8Array(channel,8);worker=new Worker(import.meta.env.BASE_URL + 'engine/worker.js');worker.onmessage=({data})=>{if(data.type==='loaded'){sendUci('uci')}else if(data.type==='uciok'){sendUci(`setoption name Threads value ${settings.threads}`);sendUci(`setoption name Hash value ${settings.hash}`);sendUci('isready');$('#prepMessage').textContent='Completing the UCI handshake…'}else if(data.type==='ready'){ready=true;$('.prep-meter').classList.remove('indeterminate');$('.prep-meter span').style.width='100%';$('#prepTitle').textContent='Engine ready';$('#prepMessage').textContent=`Stockfish is ready · ${settings.threads} thread${settings.threads===1?'':'s'} · ${settings.cores} logical cores available`;$('#prepProgress').textContent='READY';$('#prepStage').textContent='RUNNING LOCALLY';setTimeout(()=>{show('analysis');renderBoard();renderMoves();active=true;startAnalysis()},250)}else if(data.type==='line')onEngineLine(data.line);else if(data.type==='diagnostic')console.debug('[Stockfish]',data.message);else if(data.type==='error')engineFailure(data.message)};worker.onerror=event=>engineFailure(event.message||'The local Stockfish worker failed to start.');worker.postMessage({type:'init',buffer:channel});setTimeout(()=>{if(!ready&&worker){$('#prepTitle').textContent='Engine initialization is taking longer than expected';$('#prepMessage').textContent='Stockfish is still preparing locally. The evaluation network is large; keep this page open while it finishes.';$('#prepProgress').textContent='INITIALIZING · NO TRANSFER PERCENTAGE AVAILABLE'}},30000)}catch(error){$('#prepTitle').textContent='Could not prepare engine';$('#prepMessage').textContent=error.message;$('#prepProgress').textContent='ENGINE ERROR';showToast(error.message)}}
+const onEngineLineBeforeMoveReview=onEngineLine;
+onEngineLine=function(line){
+	if(!line.startsWith('bestmove')||workingIndex<0||interrupted){onEngineLineBeforeMoveReview(line);return}
+	if(searchStage==='best'){
+		bestPositionInfo=latestInfo;
+		const afterMove=new Chess(positions[workingIndex+1]);
+		if(afterMove.isGameOver()){
+			const checkmate=afterMove.isCheckmate();
+			searchStage='played';
+			latestInfo={score:checkmate?-1000:0,mate:checkmate?-1:null,depth:bestPositionInfo?.depth||0,nodes:bestPositionInfo?.nodes||0,pv:[]};
+		}
+		onEngineLineBeforeMoveReview(line);
+		return
+	}
+	if(searchStage!=='played'){onEngineLineBeforeMoveReview(line);return}
+	const ply=workingIndex,bestInfo=bestPositionInfo,playedInfo=latestInfo,move=history[ply],bestMove=bestInfo?.pv?.[0]||null;
+	onEngineLineBeforeMoveReview(line);
+	const result=analyses[ply];
+	if(!result)return;
+	const playedUci=`${move.from}${move.to}${move.promotion||''}`,playedIsBest=bestMove===playedUci,bestScore=bestInfo?.score??0,playedScore=playedInfo?.score??0;
+	const winLoss=Math.max(0,referenceWinPercent(bestScore*100)-referenceWinPercent(-playedScore*100));
+	result.playedIsBest=playedIsBest;
+	result.classification=referenceClassification(winLoss,playedIsBest);
+	result.accuracy=referenceMoveAccuracy(winLoss);
+	renderMoves();
+	updateAnalysisPanel()
+};
+function referenceWinPercent(centipawns){const score=Math.max(-1000,Math.min(1000,centipawns));return 50+50*(2/(1+Math.exp(-0.00368208*score))-1)}
+function referenceMoveAccuracy(winPercentLoss){return Math.max(0,Math.min(100,103.1668*Math.exp(-0.04354*Math.max(0,winPercentLoss))-3.1669))}
+function referenceClassification(winPercentLoss,playedIsBest){if(playedIsBest)return 'best';if(winPercentLoss<=5)return 'excellent';if(winPercentLoss<=10)return 'good';if(winPercentLoss<=20)return 'inaccuracy';if(winPercentLoss<=35)return 'mistake';return 'blunder'}
 function engineFailure(message){console.error('Stockfish worker error:',message);$('#prepTitle').textContent='Could not start engine';$('#prepMessage').textContent='Stockfish could not start. Check the local engine build and browser requirements.';$('#prepProgress').textContent='ENGINE ERROR';$('#engineStatus').textContent='Engine error';showToast(message)}
 function startAnalysis(){analysisQueue=Array.from({length:history.length},(_,ply)=>ply);analysisQueue.sort((a,b)=>((a<config.priorityPlies?0:1)-(b<config.priorityPlies?0:1))||a-b);runNext()}
 function prioritize(ply){if(workingIndex===ply)return;analysisQueue=analysisQueue.filter(item=>item!==ply);analysisQueue.unshift(ply);if(worker&&workingIndex>=0){analysisQueue.push(workingIndex);interrupted=true;sendUci('stop')}}
