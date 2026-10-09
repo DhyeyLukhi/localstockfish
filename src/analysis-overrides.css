@@ -194,3 +194,110 @@
         overflow-y: auto;
     }
 }
+/* =========================================================
+   COMPACT VIEWPORT FIX (Squeeze spacing & raise buttons)
+   ========================================================= */
+
+@media (min-width: 701px) {
+  /* 1. Reduce top bar and section padding to pull content UP */
+  .topbar {
+    height: 54px;
+  }
+
+  .analysis {
+    height: calc(100vh - 54px);
+    padding-top: 8px;
+    padding-bottom: 10px;
+  }
+
+  .analysis-title {
+    margin-bottom: 6px;
+  }
+
+  .analysis-title h1 {
+    font-size: 24px;
+    margin: 2px 0 0;
+  }
+
+  /* 2. Tighten vertical gap between board and side panel */
+  .dashboard {
+    gap: 16px;
+  }
+
+  /* 3. Scale down board size slightly to ensure buttons stay visible */
+  .board {
+    width: min(100%, calc(100vh - 250px));
+    max-height: calc(100vh - 250px);
+  }
+
+  /* 4. Shrink player avatar bars and board coordinates padding */
+  .player-bar {
+    height: 32px;
+    font-size: 11px;
+  }
+
+  .board-coords {
+    gap: 8px;
+    padding-top: 6px;
+  }
+
+  .board-coords button {
+    width: 36px;
+    height: 32px;
+    font-size: 18px;
+  }
+
+  .board-coords span {
+    padding: 7px 10px;
+    font-size: 9px;
+  }
+
+  /* 5. Compress move list cards & overview area to fit side column */
+  .review-area {
+    gap: 10px;
+  }
+
+  .review-main {
+    gap: 10px;
+  }
+
+  .move-section {
+    padding: 10px 12px 6px;
+  }
+
+  .move-row {
+    height: 28px;
+  }
+
+  .move {
+    padding: 4px 5px;
+    font-size: 11px;
+  }
+
+  .score-card {
+    padding: 10px 12px;
+  }
+
+  .accuracy-pair strong {
+    font-size: 20px;
+  }
+
+  .move-review {
+    padding: 10px 12px;
+    min-height: auto;
+  }
+
+  .overview-panel {
+    padding: 0 10px 8px;
+  }
+
+  .overview-heading {
+    min-height: 34px;
+  }
+
+  .overview-column-head,
+  .overview-row {
+    min-height: 25px;
+    font-size: 10px;
+  }
+}

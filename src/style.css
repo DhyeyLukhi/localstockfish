@@ -35,7 +35,7 @@
 .board-coords button{width:40px;height:38px;border:1px solid #3b3e35;border-radius:5px;background:#1a1c18;font-size:22px;line-height:1}
 .board-coords button:hover{border-color:#777e5a;background:#25281f;color:#e6e8d9}
 .board-coords span{min-width:150px;padding:11px 12px;border:1px solid #383b32;border-radius:5px;background:#20221c;color:#d4d7c8;font:10px 'DM Mono',monospace;letter-spacing:.08em}
-.review-area{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(230px,.92fr);grid-template-rows:minmax(0,1fr);gap:14px;min-width:0;min-height:0;overflow:visible}
+.review-area{display:grid;grid-template-columns:2fr 2fr;grid-template-rows:minmax(0,1fr);gap:14px;min-width:0;min-height:0;overflow:visible}
 .review-main{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:14px;min-width:0;min-height:0}
 .move-section,.score-card,.overview-panel{border:1px solid #30322d;border-radius:6px;background:#191b17}
 .move-section{display:flex;flex-direction:column;padding:16px 17px 10px;min-height:0}
