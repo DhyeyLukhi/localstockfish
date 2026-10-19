@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">LocalStockfish logo</title>
+  <desc id="desc">A white chess king inside a blue browser frame with cyan and green analysis lines, above the LocalStockfish wordmark.</desc>
+  <defs>
+    <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4387FF"/>
+      <stop offset="1" stop-color="#3157F5"/>
+    </linearGradient>
+    <linearGradient id="engine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#17C9E8"/>
+      <stop offset="1" stop-color="#29D987"/>
+    </linearGradient>
+    <linearGradient id="wordmark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2E9BFF"/>
+      <stop offset="1" stop-color="#25C8E9"/>
+    </linearGradient>
+    <linearGradient id="king" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#C8D9F7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Optional background is transparent so the mark works on light or dark UI. -->
+  <g transform="translate(0,12)">
+    <!-- Browser frame -->
+    <path d="M424 190 H330 C299 190 278 211 278 242 V485 C278 516 299 537 330 537 H370"
+          fill="none" stroke="url(#frame)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M776 190 H870 C901 190 922 211 922 242 V485 C922 516 901 537 870 537 H830"
+          fill="none" stroke="url(#frame)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="340" cy="242" r="11" fill="#4D83FF"/>
+    <circle cx="376" cy="242" r="11" fill="#4D83FF"/>
+    <circle cx="412" cy="242" r="11" fill="#4D83FF"/>
+
+    <!-- Chess king: deliberately simplified for a crisp silhouette at small sizes -->
+    <g fill="url(#king)" stroke="#F7FAFF" stroke-width="3" stroke-linejoin="round">
+      <path d="M584 84 H616 V111 H642 V142 H616 V166
+               C647 174 672 194 687 220
+               L663 280 C655 298 651 311 651 327
+               H549 C549 311 545 298 537 280
+               L513 220 C528 194 553 174 584 166 V142 H558 V111 H584 Z"/>
+      <path d="M542 333 H658 C673 333 683 343 683 354
+               C683 366 671 374 655 374 H645
+               C646 420 657 466 686 502
+               L715 536 H485 L514 502
+               C543 466 554 420 555 374 H545
+               C529 374 517 366 517 354 C517 343 527 333 542 333 Z"/>
+      <path d="M486 538 H714 C739 538 758 557 767 584
+               L779 616 H421 L433 584 C442 557 461 538 486 538 Z"/>
+      <path d="M411 630 Q411 612 430 612 H770 Q789 612 789 630
+               Q789 648 770 648 H430 Q411 648 411 630 Z" stroke="none"/>
+    </g>
+    <!-- King detailing -->
+    <path d="M537 286 H663 M552 374 H648 M484 539 H716 M429 612 H771"
+          fill="none" stroke="#8BADEB" stroke-width="8" stroke-linecap="round" opacity=".9"/>
+
+    <!-- Local analysis lines -->
+    <g fill="none" stroke="url(#engine)" stroke-width="20" stroke-linecap="round">
+      <path d="M758 345 H887"/>
+      <path d="M724 389 H827"/>
+      <path d="M735 433 H909"/>
+      <path d="M755 477 H850"/>
+      <path d="M781 521 H824"/>
+    </g>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="600" y="790" text-anchor="middle"
+        font-family="Inter, SF Pro Display, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        font-size="100" font-weight="750" letter-spacing="-3">
+    <tspan fill="#F3F6FC">Local</tspan><tspan fill="url(#wordmark)">Stockfish</tspan>
+  </text>
+</svg>

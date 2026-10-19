@@ -194,6 +194,77 @@
         overflow-y: auto;
     }
 }
+
+.brand-logo-frame {
+	position: relative;
+	display: block;
+	width: 44px;
+	height: 40px;
+	flex: 0 0 44px;
+	overflow: hidden;
+}
+
+.brand-logo {
+	position: absolute;
+	top: 0;
+	left: -13px;
+	display: block;
+	width: 70px;
+	max-width: none;
+	height: auto;
+}
+
+.move-review {
+	width: 100%;
+	min-width: 0;
+}
+
+.review-details {
+	min-width: 0;
+	gap: clamp(8px, 1vw, 16px);
+}
+
+.review-entry {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.review-entry > strong {
+	min-width: 0;
+	font-size: clamp(16px, 1.6vw, 21px);
+	overflow-wrap: anywhere;
+}
+
+.review-badge {
+	max-width: 100%;
+}
+
+.review-badge b {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.review-divider {
+	align-self: stretch;
+	height: auto;
+	min-height: 42px;
+}
+
+.move.quality-brilliant,
+.overview-row.quality-brilliant > span {
+	color: #19a995;
+}
+
+.move.quality-great,
+.overview-row.quality-great > span {
+	color: #6c91b8;
+}
+
+@media (min-width: 701px) {
+	.analysis .review-area {
+		grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+	}
+}
+
 /* =========================================================
    COMPACT VIEWPORT FIX (Squeeze spacing & raise buttons)
    ========================================================= */
